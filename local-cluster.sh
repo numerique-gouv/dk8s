@@ -1,5 +1,13 @@
 #!/bin/sh
+
+ARGOCD_VERSION="6.4.1"
+KUBE_PROM_STACK_VERSION="56.9.0"
+LOKI_VERSION="5.43.3"
+PROMTAIL_VERSION="6.15.5"
+
 set -o errexit
+
+cd /tmp
 
 # 0. Create ca
 mkcert -install
@@ -22,7 +30,7 @@ fi
 # https://github.com/kubernetes-sigs/kind/issues/2875
 # https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration
 # See: https://github.com/containerd/containerd/blob/main/docs/hosts.md
-cat <<EOF | kind create cluster --config=-
+cat <<EOF | kind create cluster -n dk8s --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 containerdConfigPatches:
@@ -97,10 +105,11 @@ kubectl -n ingress-nginx wait --for=condition=Available deployment/ingress-nginx
 
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo add grafana https://grafana.github.io/helm-charts
+helm repo add argo-cd https://argoproj.github.io/argo-helm
 
 helm repo update
 
-cat <<EOF | helm upgrade loki grafana/loki --install -f -
+cat <<EOF | helm upgrade --install --version $LOKI_VERSION loki grafana/loki -f -
 loki:
   auth_enabled: false
   commonConfig:
@@ -110,7 +119,7 @@ loki:
 singleBinary:
   replicas: 1
 EOF
-cat <<EOF | helm upgrade kube-prom-stack prometheus-community/kube-prometheus-stack --install -f -
+cat <<EOF | helm upgrade --install --version $KUBE_PROM_STACK_VERSION kube-prom-stack prometheus-community/kube-prometheus-stack -f -
 grafana:
   ingress:
     enabled: true
@@ -122,8 +131,39 @@ grafana:
       access: proxy
       url: http://loki:3100
 EOF
-cat <<EOF | helm upgrade --install promtail grafana/promtail
+cat <<EOF | helm upgrade --install --version $PROMTAIL_VERSION promtail grafana/promtail
 config:
   clients:
     - url: http://loki:3100/loki/api/v1/push
+EOF
+
+cat <<EOF | helm upgrade --install --version $ARGOCD_VERSION argocd argocd/argo-cd -f -
+global:
+  domain: argocd.127.0.0.1.nip.io
+configs:
+  params:
+    server.insecure: true
+  secret:
+    # admin / admin
+    argocdServerAdminPassword: \$2a\$10\$y8BqLqjTaOyfKu3xv9L/UO3mi9NnpSeX8R.HQqWH9XDla0YLHDxW6
+    argocdServerAdminPasswordMtime: "2023-12-01T10:11:12Z"
+server:
+  ingress:
+    enabled: true
+EOF
+
+cat <<EOF
+=======================================
+
+
+Your local dk8s cluster is starting...
+
+in few minutes you will be able to connect to :
+
+https://grafana.127.0.0.1.nip.io -> admin / prom-operator
+https://argocd.127.0.0.1.nip.io -> admin / admin
+
+
+
+=======================================
 EOF
