@@ -135,7 +135,7 @@ config:
     - url: http://loki:3100/loki/api/v1/push
 EOF
 
-cat <<EOF | helm upgrade --install --version $ARGOCD_VERSION argocd argocd/argo-cd -f -
+cat <<EOF | helm upgrade --install --version $ARGOCD_VERSION argocd argo-cd/argo-cd -f -
 global:
   domain: argocd.127.0.0.1.nip.io
 configs:
