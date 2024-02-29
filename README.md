@@ -30,6 +30,14 @@ https://grafana.127.0.0.1.nip.io
 admin / prom-operator
 ```
 
+and :
+
+https://argocd.127.0.0.1.nip.io
+
+```
+admin / admin
+```
+
 ### Use local docker image
 
 The ./local-cluster.sh create a local registry. In order to use it, you just need to tag docker image as follow:
