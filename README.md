@@ -12,6 +12,8 @@ In order to use the script 'local-cluster.sh', you need :
 - kind
 - mkcert
 
+To install requirements use `scripts/install-prereq.sh`
+
 ## How to
 
 Deploy kind cluster:

@@ -1,5 +1,6 @@
 #!/bin/sh
 
+KUBE_VERSION="${KUBE_VERSION:-v1.27.3}"
 ARGOCD_VERSION="6.4.1"
 KUBE_PROM_STACK_VERSION="56.9.0"
 LOKI_VERSION="5.43.3"
@@ -30,7 +31,7 @@ fi
 # https://github.com/kubernetes-sigs/kind/issues/2875
 # https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration
 # See: https://github.com/containerd/containerd/blob/main/docs/hosts.md
-cat <<EOF | kind create cluster -n dk8s --config=-
+cat <<EOF | kind create cluster -n dk8s --image "kindest/node:${KUBE_VERSION}" --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 containerdConfigPatches:
@@ -39,7 +40,6 @@ containerdConfigPatches:
     config_path = "/etc/containerd/certs.d"
 nodes:
 - role: control-plane
-  image: kindest/node:v1.27.3
   kubeadmConfigPatches:
   - |
     kind: InitConfiguration
@@ -54,9 +54,7 @@ nodes:
     hostPort: 443
     protocol: TCP
 - role: worker
-  image: kindest/node:v1.27.3
 - role: worker
-  image: kindest/node:v1.27.3
 EOF
 
 # 3. Add the registry config to the nodes
@@ -137,7 +135,7 @@ config:
     - url: http://loki:3100/loki/api/v1/push
 EOF
 
-cat <<EOF | helm upgrade --install --version $ARGOCD_VERSION argocd argocd/argo-cd -f -
+cat <<EOF | helm upgrade --install --version $ARGOCD_VERSION argocd argo-cd/argo-cd -f -
 global:
   domain: argocd.127.0.0.1.nip.io
 configs:
