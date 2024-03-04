@@ -18,6 +18,7 @@ nodes:
     kind: InitConfiguration
     nodeRegistration:
       kubeletExtraArgs:
+        # by default, ingress-nginx on kind use ingress-ready=true
         node-labels: "ingress-ready=true"
   extraPortMappings:
   - containerPort: 80
