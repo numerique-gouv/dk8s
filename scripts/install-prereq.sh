@@ -52,6 +52,14 @@ KIND_URL=https://kind.sigs.k8s.io/dl/${KIND_VERSION}/${KIND_BINARY}
 MKCERT_VERSION="${MKCERT_VERSION:-v1.4.4}"
 MKCERT_BINARY=mkcert-${MKCERT_VERSION}-${OS}-${ARCH}
 MKCERT_URL=https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/${MKCERT_BINARY}
+
+AGE_VERSION="${AGE_VERSION:-v1.1.1}"
+AGE_URL="https://github.com/FiloSottile/age/releases/download/${AGE_VERSION}/age-${AGE_VERSION}-${OS}-${ARCH}.tar.gz"
+
+SOPS_VERSION="${SOPS_VERSION:-v3.8.1}"
+SOPS_BINARY="sops-${SOPS_VERSION}.${OS}.${ARCH}"
+SOPS_URL="https://github.com/getsops/sops/releases/download/${SOPS_VERSION}/${SOPS_BINARY}"
+
 #
 # default
 docker_is_installed="false"
@@ -59,6 +67,8 @@ kind_is_installed="false"
 kubectl_is_installed="false"
 mkcert_is_installed="false"
 helmfile_is_installed="false"
+age_is_installed="false"
+sops_is_installed="false"
 
 # check if exist
 type docker && docker_is_installed="true"
@@ -66,6 +76,8 @@ type kind && kind_is_installed="true"
 type kubectl && kubectl_is_installed="true"
 type mkcert && mkcert_is_installed="true"
 type helmfile && helmfile_is_installed="true"
+type age && age_is_installed="true"
+type ops && sops_is_installed="true"
 
 if [[ "${FORCE_INSTALL}" == "true" ]]; then
     echo "# force install ${FORCE_INSTALL}"
@@ -73,6 +85,8 @@ if [[ "${FORCE_INSTALL}" == "true" ]]; then
     kind_is_installed=false
     mkcert_is_installed=false
     helmfile_is_installed=false
+    age_is_installed=false
+    sops_is_installed=false
 fi
 
 if [[ "$docker_is_installed" == "false" ]];then
@@ -110,6 +124,9 @@ else
   helmfile --no-color -v
 fi
 
+echo "# helmfile init"
+helmfile init --force
+
 if [[ "$mkcert_is_installed" == "false" ]];then
    echo "# Install mkcert ${MKCERT_VERSION}"
   curl -LOs ${MKCERT_URL}
@@ -119,8 +136,25 @@ else
   mkcert -version
 fi
 
+if [[ "$age_is_installed" == "false" ]];then
+   echo "# Install age ${AGE_VERSION}"
+  curl -Ls ${AGE_URL} | tar zxvf - age/age age/age-keygen
+  sudo mv age/age /usr/local/bin/age
+  sudo mv age/age-keygen /usr/local/bin/age-keygen
+  rm -rf age
+else
+  age --version
+  age-keygen --version
+fi
 
-echo "# helmfile init"
-helmfile init --force
+if [[ "$sops_is_installed" == "false" ]];then
+   echo "# Install sops ${SOPS_VERSION}"
+  curl -LOs ${SOPS_URL}
+  chmod +x ${SOPS_BINARY}
+  sudo mv ${SOPS_BINARY} /usr/local/bin/sops
+else
+  sops -version
+fi
+
 
 echo "# Install done"
