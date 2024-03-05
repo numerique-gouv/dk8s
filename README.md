@@ -11,6 +11,7 @@ In order to use the script 'local-cluster.sh', you need :
 - docker
 - kind
 - mkcert
+- sops, age
 
 To install requirements use `scripts/install-prereq.sh`
 
