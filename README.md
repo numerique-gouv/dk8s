@@ -57,3 +57,10 @@ Then change value for the  docker image in the values.grist.yaml  as follow :
    pullPolicy: Always
    tag: latest
 ```
+
+### Override default kind cluster config
+
+```
+export CLUSTER_CONFIG="clusters/my-dev.yaml"
+./local-cluster.sh
+```

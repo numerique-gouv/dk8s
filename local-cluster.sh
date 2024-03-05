@@ -5,6 +5,8 @@ ARGOCD_VERSION="6.4.1"
 KUBE_PROM_STACK_VERSION="56.9.0"
 LOKI_VERSION="5.43.3"
 PROMTAIL_VERSION="6.15.5"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+CLUSTER_CONFIG="$SCRIPT_DIR/${CLUSTER_CONFIG:-clusters/default.yaml}"
 
 set -o errexit
 
@@ -31,31 +33,8 @@ fi
 # https://github.com/kubernetes-sigs/kind/issues/2875
 # https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration
 # See: https://github.com/containerd/containerd/blob/main/docs/hosts.md
-cat <<EOF | kind create cluster -n dk8s --image "kindest/node:${KUBE_VERSION}" --config=-
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-containerdConfigPatches:
-- |-
-  [plugins."io.containerd.grpc.v1.cri".registry]
-    config_path = "/etc/containerd/certs.d"
-nodes:
-- role: control-plane
-  kubeadmConfigPatches:
-  - |
-    kind: InitConfiguration
-    nodeRegistration:
-      kubeletExtraArgs:
-        node-labels: "ingress-ready=true"
-  extraPortMappings:
-  - containerPort: 80
-    hostPort: 80
-    protocol: TCP
-  - containerPort: 443
-    hostPort: 443
-    protocol: TCP
-- role: worker
-- role: worker
-EOF
+echo "# kind cluster dk8s config ${CLUSTER_CONFIG}"
+kind create cluster -n dk8s --image "kindest/node:${KUBE_VERSION}" --config "${CLUSTER_CONFIG}"
 
 # 3. Add the registry config to the nodes
 #
@@ -93,6 +72,8 @@ data:
     help: "https://kind.sigs.k8s.io/docs/user/local-registry/"
 EOF
 
+# ingress-nginx
+#   Note: Quick starter ingress-nginx deployment on kind need label ingress-ready=true on node
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
 kubectl -n ingress-nginx create secret tls mkcert --key 127.0.0.1.nip.io+1-key.pem --cert 127.0.0.1.nip.io+1.pem
 kubectl -n ingress-nginx patch deployments.apps ingress-nginx-controller --type 'json' -p '[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value":"--default-ssl-certificate=ingress-nginx/mkcert"}]'
@@ -101,6 +82,7 @@ sleep 30
 
 kubectl -n ingress-nginx wait --for=condition=Available deployment/ingress-nginx-controller --timeout=300s
 
+# Adddons helm repo
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo add grafana https://grafana.github.io/helm-charts
 helm repo add argo-cd https://argoproj.github.io/argo-helm

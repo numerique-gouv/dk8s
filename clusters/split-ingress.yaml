@@ -1,0 +1,42 @@
+---
+#
+# specifications to emulate hardened cluster configuration
+# - No application pods on control-plane
+# - expose some admin services to dedicated ingress-nginx: labeled ingress-admin, locally exposed on ports 81/444
+# - expose application service to another dedicated ingress-nginx , labeled ingress-app, locally exposed on ports 80/443
+#
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  kubeadmConfigPatches:
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        # taint to prevent application pods from being scheduled on system node pools
+        register-with-taints: "CriticalAddonsOnly=true:NoExecute"
+- role: worker
+  extraPortMappings:
+  # exposed on local port to 80/443
+  - containerPort: 80
+    hostPort: 80
+    protocol: TCP
+  - containerPort: 443
+    hostPort: 443
+    protocol: TCP
+  labels:
+    # label to address app ingress pod
+    ingress-app: true
+- role: worker
+  extraPortMappings:
+  # exposed on local port to 81/444
+  - containerPort: 80
+    hostPort: 81
+    protocol: TCP
+  - containerPort: 443
+    hostPort: 444
+    protocol: TCP
+  labels:
+    # label to address admin ingress pod
+    ingress-admin: true
