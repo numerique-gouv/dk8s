@@ -117,6 +117,8 @@ config:
     - url: http://loki:3100/loki/api/v1/push
 EOF
 
+kubectl wait deployment/kube-prom-stack-grafana   --for=condition=Available  --timeout=300s
+
 cat <<EOF | helm upgrade --install --version $ARGOCD_VERSION argocd argo-cd/argo-cd -f -
 global:
   domain: argocd.127.0.0.1.nip.io
@@ -131,6 +133,8 @@ server:
   ingress:
     enabled: true
 EOF
+
+kubectl wait deployment/argocd-server   --for=condition=Available  --timeout=300s
 
 cat <<EOF
 =======================================
