@@ -42,6 +42,9 @@ case "$KUBECTL_VERSION" in
 esac
 KUBECTL_URL=${KUBECTL_RELEASE_VERSION}/${KUBECTL_VERSION}/bin/${OS}/${ARCH}/kubectl
 
+HELM_VERSION="${HELM_VERSION:-v3.14.2}"
+HELM_URL=https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+
 HELMFILE_VERSION="${HELMFILE_VERSION:-0.162.0}"
 HELMFILE_URL=https://github.com/helmfile/helmfile/releases/download/v${HELMFILE_VERSION}/helmfile_${HELMFILE_VERSION}_${OS}_${ARCH}.tar.gz
 
@@ -66,6 +69,7 @@ docker_is_installed="false"
 kind_is_installed="false"
 kubectl_is_installed="false"
 mkcert_is_installed="false"
+helm_is_installed="false"
 helmfile_is_installed="false"
 age_is_installed="false"
 sops_is_installed="false"
@@ -75,6 +79,7 @@ type docker && docker_is_installed="true"
 type kind && kind_is_installed="true"
 type kubectl && kubectl_is_installed="true"
 type mkcert && mkcert_is_installed="true"
+type helm && helm_is_installed="true"
 type helmfile && helmfile_is_installed="true"
 type age && age_is_installed="true"
 type ops && sops_is_installed="true"
@@ -84,6 +89,7 @@ if [[ "${FORCE_INSTALL}" == "true" ]]; then
     kubectl_is_installed=false
     kind_is_installed=false
     mkcert_is_installed=false
+    helm_is_installed=false
     helmfile_is_installed=false
     age_is_installed=false
     sops_is_installed=false
@@ -115,6 +121,13 @@ else
   kubectl version --client
 fi
 
+
+if [[ "$helm_is_installed" == "false" ]];then
+   echo "# Install helm ${HELM_VERSION}"
+  curl -Ls ${HELM_URL} | bash -- -v ${HELM_VERSION}
+else
+  helm version
+fi
 
 if [[ "$helmfile_is_installed" == "false" ]];then
    echo "# Install helmfile ${HELMFILE_VERSION}"
