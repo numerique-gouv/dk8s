@@ -113,7 +113,7 @@ fi
 
 
 if [[ "$kubectl_is_installed" == "false" ]];then
-   echo "# Install kubectl ${KUBECTL_VERSION}"
+  echo "# Install kubectl ${KUBECTL_VERSION}"
   curl -LOs ${KUBECTL_URL}
   chmod +x kubectl
   sudo mv kubectl /usr/local/bin/kubectl
@@ -123,14 +123,14 @@ fi
 
 
 if [[ "$helm_is_installed" == "false" ]];then
-   echo "# Install helm ${HELM_VERSION}"
+  echo "# Install helm ${HELM_VERSION}"
   curl -Ls ${HELM_URL} | bash -- -v ${HELM_VERSION}
 else
   helm version
 fi
 
 if [[ "$helmfile_is_installed" == "false" ]];then
-   echo "# Install helmfile ${HELMFILE_VERSION}"
+  echo "# Install helmfile ${HELMFILE_VERSION}"
   curl -Ls ${HELMFILE_URL} | tar zxvf - helmfile
   sudo mv helmfile /usr/local/bin/helmfile
 else
@@ -141,7 +141,7 @@ echo "# helmfile init"
 helmfile init --force
 
 if [[ "$mkcert_is_installed" == "false" ]];then
-   echo "# Install mkcert ${MKCERT_VERSION}"
+  echo "# Install mkcert ${MKCERT_VERSION}"
   curl -LOs ${MKCERT_URL}
   chmod +x ${MKCERT_BINARY}
   sudo mv ${MKCERT_BINARY} /usr/local/bin/mkcert
@@ -150,7 +150,7 @@ else
 fi
 
 if [[ "$age_is_installed" == "false" ]];then
-   echo "# Install age ${AGE_VERSION}"
+  echo "# Install age ${AGE_VERSION}"
   curl -Ls ${AGE_URL} | tar zxvf - age/age age/age-keygen
   sudo mv age/age /usr/local/bin/age
   sudo mv age/age-keygen /usr/local/bin/age-keygen
@@ -161,7 +161,7 @@ else
 fi
 
 if [[ "$sops_is_installed" == "false" ]];then
-   echo "# Install sops ${SOPS_VERSION}"
+  echo "# Install sops ${SOPS_VERSION}"
   curl -LOs ${SOPS_URL}
   chmod +x ${SOPS_BINARY}
   sudo mv ${SOPS_BINARY} /usr/local/bin/sops
