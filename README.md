@@ -1,5 +1,7 @@
 # dk8s
 
+[![main](https://github.com/numerique-gouv/dk8s/actions/workflows/test.yaml/badge.svg)](https://github.com/numerique-gouv/dk8s/actions/workflows/test.yaml?branch=main)
+
 The goal of this project is to deploy quickly a local k8s cluster in order to be able to experiment k8s deployment with all tools (grafana/prometheus/loki...).
 
 

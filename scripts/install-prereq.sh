@@ -82,7 +82,7 @@ type mkcert && mkcert_is_installed="true"
 type helm && helm_is_installed="true"
 type helmfile && helmfile_is_installed="true"
 type age && age_is_installed="true"
-type ops && sops_is_installed="true"
+type sops && sops_is_installed="true"
 
 if [[ "${FORCE_INSTALL}" == "true" ]]; then
     echo "# force install ${FORCE_INSTALL}"

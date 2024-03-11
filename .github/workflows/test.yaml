@@ -1,0 +1,35 @@
+name: "test"
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref_name }}-test-workloads"
+  cancel-in-progress: true
+
+jobs:
+  ci-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test Prerequisite installations
+        run: |
+          ./scripts/install-prereq.sh
+
+      - name: Test local environment
+        run: |
+          ./local-cluster.sh
+          kubectl get nodes -A
+          kubectl get pod -A
+          ./ci/tests/test-local-url.sh
+          ./scripts/delete-local-cluster.sh
+
+      - name: Teardown
+        if: always()
+        run: |
+          echo "Destroy cluster"
+          kind delete clusters -A
