@@ -28,11 +28,24 @@ initOS() {
   OS=$(uname|tr '[:upper:]' '[:lower:]')
 }
 
+# runs the given command as root (detects if we are root already)
+runAsRoot() {
+  if [ $EUID -ne 0 -a "$USE_SUDO" = "true" ]; then
+    sudo "${@}"
+  else
+    "${@}"
+  fi
+}
+
 # detect OS ARCH
 initArch
 initOS
 
 # default version
+export INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+export HELM_INSTALL_DIR="${HELM_INSTALL_DIR:-$INSTALL_DIR}"
+export USE_SUDO="${USE_SUDO:-true}"
+
 FORCE_INSTALL="${FORCE_INSTALL:-false}"
 
 KIND_VERSION="${KIND_VERSION:-v0.22.0}"
@@ -98,8 +111,8 @@ docker version
 if [[ "$kind_is_installed" == "false" ]];then
   echo "# Install kind ${KIND_VERSION} from ${KIND_URL}"
   curl -LOs ${KIND_URL}
-  sudo mv ${KIND_BINARY} /usr/local/bin/kind
-  sudo chmod 755 /usr/local/bin/kind
+  runAsRoot mv ${KIND_BINARY} ${INSTALL_DIR}/kind
+  runAsRoot chmod 755 ${INSTALL_DIR}/kind
 fi
 echo "# kind"
 kind version
@@ -108,8 +121,8 @@ if [[ "$kubectl_is_installed" == "false" ]];then
   echo "# Install kubectl ${KUBECTL_VERSION} from ${KUBECTL_URL}"
   curl -LOs ${KUBECTL_URL}
   chmod +x kubectl
-  sudo mv kubectl /usr/local/bin/kubectl
-  sudo chmod 755 /usr/local/bin/kubectl
+  runAsRoot mv kubectl ${INSTALL_DIR}/kubectl
+  runAsRoot chmod 755 ${INSTALL_DIR}/kubectl
 fi
 echo "# kubectl"
 kubectl version --client
@@ -117,7 +130,7 @@ kubectl version --client
 if [[ "$helm_is_installed" == "false" ]];then
   echo "# Install helm ${HELM_VERSION} from ${HELM_URL}"
   curl -Ls ${HELM_URL} | bash -s -- -v ${HELM_VERSION}
-  sudo chmod 755 /usr/local/bin/helm
+  runAsRoot chmod 755 ${INSTALL_DIR}/helm
 fi
 echo "# helm"
 helm version
@@ -125,8 +138,8 @@ helm version
 if [[ "$helmfile_is_installed" == "false" ]];then
   echo "# Install helmfile ${HELMFILE_VERSION} from ${HELMFILE_URL}"
   curl -Ls ${HELMFILE_URL} | tar zxvf - helmfile
-  sudo mv helmfile /usr/local/bin/helmfile
-  sudo chmod 755 /usr/local/bin/helmfile
+  runAsRoot mv helmfile ${INSTALL_DIR}/helmfile
+  runAsRoot chmod 755 ${INSTALL_DIR}/helmfile
 fi
 echo "# helmfile"
 helmfile --no-color -v
@@ -138,8 +151,8 @@ if [[ "$mkcert_is_installed" == "false" ]];then
   echo "# Install mkcert ${MKCERT_VERSION} from ${MKCERT_URL}"
   curl -LOs ${MKCERT_URL}
   chmod +x ${MKCERT_BINARY}
-  sudo mv ${MKCERT_BINARY} /usr/local/bin/mkcert
-  sudo chmod 755 /usr/local/bin/mkcert
+  runAsRoot mv ${MKCERT_BINARY} ${INSTALL_DIR}/mkcert
+  runAsRoot chmod 755 ${INSTALL_DIR}/mkcert
 fi
 echo "# mkcert"
 mkcert -version
@@ -147,9 +160,9 @@ mkcert -version
 if [[ "$age_is_installed" == "false" ]];then
   echo "# Install age ${AGE_VERSION} from ${AGE_URL}"
   curl -Ls ${AGE_URL} | tar zxvf - age/age age/age-keygen
-  sudo mv age/age /usr/local/bin/age
-  sudo mv age/age-keygen /usr/local/bin/age-keygen
-  sudo chmod 755 /usr/local/bin/age /usr/local/bin/age-keygen
+  runAsRoot mv age/age ${INSTALL_DIR}/age
+  runAsRoot mv age/age-keygen ${INSTALL_DIR}/age-keygen
+  runAsRoot chmod 755 ${INSTALL_DIR}/age ${INSTALL_DIR}/age-keygen
   rm -rf age
 fi
 echo "# age"
@@ -160,8 +173,8 @@ if [[ "$sops_is_installed" == "false" ]];then
   echo "# Install sops ${SOPS_VERSION} from ${SOPS_URL}"
   curl -LOs ${SOPS_URL}
   chmod +x ${SOPS_BINARY}
-  sudo mv ${SOPS_BINARY} /usr/local/bin/sops
-  sudo chmod 755 /usr/local/bin/sops
+  runAsRoot mv ${SOPS_BINARY} ${INSTALL_DIR}/sops
+  runAsRoot chmod 755 ${INSTALL_DIR}/sops
 fi
 echo "# sops"
 sops -version
